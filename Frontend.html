@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="layout/styles/layout.css" rel="stylesheet" type="text/css" media="all">
+    <!-- <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script> -->
+    <title>Fire-alarm-system</title>
+</head>
+<body id="top">
+    <div id="main-bg"> 
+        <div id="pageintro" class="hoc clear"> 
+          <article>
+            <h3 id="main-title" class="heading">Sve je ok.</h3>
+            <footer>
+              <ul class="nospace inline pushright">
+                <li><input id="btn-turn-off" type="button" class="btn dugme" onclick="sendingData('Alarm',false)" value="Isključi"></li>
+              </ul>
+            </footer>
+          </article>
+        </div>
+      </div>
+      <main class="hoc container clear"> 
+        <div class="sectiontitle">
+          <h6 class="heading">Historija</h6>
+        </div>
+        <article class="group">
+          <div class="first">
+              <table id="table-history">
+                  <thead>
+                    <tr>
+                        <td>Datum</td>
+                        <td>Vrijeme</td>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body">
+                        
+                  </tbody>
+              </table>
+           </div>
+        </article>
+      </main>
+
+      
+    <a id="backtotop" href="#top"><i class="fa fa-chevron-up"></i></a>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-analytics.js"></script>
+
+    <script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyCa1RGx2AxXffsfjWYrpR3rG6jGSecDY1o",
+    authDomain: "iot-project-c5068.firebaseapp.com",
+    databaseURL: "https://iot-project-c5068-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "iot-project-c5068",
+    storageBucket: "iot-project-c5068.appspot.com",
+    messagingSenderId: "121390899656",
+    appId: "1:121390899656:web:466dfe8bf3bd05d40260fd",
+    measurementId: "G-KD55N6MP94"
+  };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    /*==========================================================*/
+    var alarmStatus = firebase.database().ref('Alarm/Status');
+    alarmStatus.on('value', (snapshot) => {
+    const data = snapshot.val();
+    updateBackground(data);
+    });
+
+    function updateBackground(data){
+        if(data){
+            document.getElementById("btn-turn-off").style.display="block";
+            document.getElementById("main-title").innerHTML="Alarm je aktiviran!";
+            document.getElementById("main-bg").style.backgroundImage="url('images/demo/backgrounds/background-fire.png')";
+        }
+        else{
+            document.getElementById("btn-turn-off").style.display="none";
+            document.getElementById("main-title").innerHTML="Sve je ok.";
+            document.getElementById("main-bg").style.backgroundImage="url('images/demo/backgrounds/background-ok.png')";
+        }
+    }
+
+    sendingData=(lokacija,status)=>{
+
+        var dateFormat = new Date();
+
+        var nowDate = dateFormat.toLocaleDateString();
+        var nowTime = dateFormat.toLocaleTimeString();
+    
+        var historyRef=firebase.database().ref().child("History");
+        historyRef.push({Time:nowTime,Date:nowDate});
+        firebase.database().ref(lokacija).set({
+            ModifiedAt: nowDate,
+            Status: status
+        }, (error) => {
+        if (error) {
+            console.log("Greska u snimanju podataka!");
+        } else {
+            console.log("Uspjesno snimljeni podaci!");
+            AppendNewRow(nowDate,nowTime);
+        }
+        });
+    }
+    var listFromHistory=firebase.database().ref().child("History");
+    listFromHistory.once("value",function(snapshot){
+        if(snapshot.exists()){
+            snapshot.forEach(function(data){
+                var _date = data.val().Date;
+                var _time= data.val().Time;
+            
+                AppendNewRow(_date,_time);
+            });
+        }
+        });
+
+    var tableBody=document.getElementById("table-body");
+    function AppendNewRow(dt, tm){
+        var newRow=tableBody.insertRow();
+        var newCell1=newRow.insertCell();
+        var newCell2=newRow.insertCell();
+        newCell1.appendChild(document.createTextNode(dt));
+        newCell2.appendChild(document.createTextNode(tm));
+    }
+    </script>
+    <!-- JAVASCRIPTS -->
+<script src="layout/scripts/jquery.min.js"></script>
+<script src="layout/scripts/jquery.backtotop.js"></script>
+<script src="layout/scripts/jquery.mobilemenu.js"></script>
+</body>
+</html>
